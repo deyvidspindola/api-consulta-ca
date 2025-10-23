@@ -1,2 +1,94 @@
-__pycache__/
+# =============================================================================
+# Git Ignore para o Projeto API CAEPI
+# =============================================================================
+
+# --- Arquivos de Ambiente (SEMPRE IGNORAR) -----------------------------------
+.env
+.env.prod
+.env.local
+.env.*.local
+
+# --- Dados Baixados (Temporários e Grandes) ----------------------------------
 tgg_export_caepi.txt
+tgg_export_caepi.zip
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Instaladores e logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testes e Cobertura
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Traduções
+*.mo
+*.pot
+
+# Ambientes Virtuais
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema Operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs da Aplicação
+*.log
+logs/
+
+# Docker
+.dockerignore
