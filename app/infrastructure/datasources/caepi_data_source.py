@@ -4,14 +4,16 @@ import os
 from ftplib import FTP
 import io
 import zipfile
+import time
+from app.core.config import settings
 
 class CAEPIDataSource(DataSourceInterface):
 
     def __init__(self):
         self.base_dados_df = None
         self.file_name = "tgg_export_caepi.txt"
-        self.base_url = "ftp.mtps.gov.br"
-        self.endpoint = "portal/fiscalizacao/seguranca-e-saude-no-trabalho/caepi/"
+        self.base_url = settings.ftp_host
+        self.endpoint = settings.ftp_endpoint
         self.columns_name = [
             "RegistroCA", "DataValidade", "Situacao", "NRProcesso", "CNPJ",
             "RazaoSocial", "Natureza", "NomeEquipamento", "DescricaoEquipamento",
@@ -19,12 +21,18 @@ class CAEPIDataSource(DataSourceInterface):
             "ObservacaoAnaliseLaudo", "CNPJLaboratorio", "RazaoSocialLaboratorio",
             "NRLaudo", "Norma"
         ]
-
-
+        self._cache_timeout = 3600 
+        self._last_update = 0
+    
     async def get_data(self) -> pd.DataFrame:
-        """Retorna o DataFrame, carregando se necessário"""
-        if self.base_dados_df is None:
+        current_time = time.time()
+        
+        # Verificar se o cache expirou
+        if (self.base_dados_df is None or 
+            current_time - self._last_update > self._cache_timeout):
             await self._to_dataframe()
+            self._last_update = current_time
+            
         return self.base_dados_df
 
     async def update_data(self) -> bool:
