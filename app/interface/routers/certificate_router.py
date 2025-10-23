@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Path
+from fastapi import APIRouter, HTTPException, Depends
 from app.interface.controllers.certificate_controller import CertificateController
 from app.interface.presenters.certificate_presenter import CertificatePresenter
 from app.infrastructure.repositories.pandas_ca_repository import PandasCARepository
 from app.infrastructure.datasources.caepi_data_source import CAEPIDataSource
 from app.application.use_cases.get_certificate_use_case import GetCertificateUseCase
 from app.application.use_cases.update_certificates_use_case import UpdateCertificatesUseCase
-from app.interface.dtos.certificate_dto import ApiResponse
+from app.interface.dtos.certificate_dto import ApiResponse, CertificateRequest
 
 # Criar router
 router = APIRouter(
@@ -36,8 +36,8 @@ async def get_certificate_controller() -> CertificateController:
     )
 
 
-@router.get(
-    "/{registro_ca}",
+@router.post(
+    "/get-certificate-by-ca",
     response_model=ApiResponse,
     summary="Buscar certificado por CA",
     description="Busca um certificado específico pelo número do registro CA",
@@ -57,24 +57,33 @@ async def get_certificate_controller() -> CertificateController:
                     }
                 }
             }
+        },
+        404: {
+            "description": "Certificado não encontrado"
+        },
+        422: {
+            "description": "Dados de entrada inválidos"
         }
     }
 )
 async def get_certificate(
-    registro_ca: str = Path(
-        ...,
-        title="Registro CA",
-        description="Número do registro do Certificado de Aprovação",
-        example="12345"
-    ),
+    request: CertificateRequest,
     controller: CertificateController = Depends(get_certificate_controller)
 ):
     """
     Busca um certificado pelo registro CA.
     
+    Recebe no corpo da requisição:
     - **registro_ca**: Número do registro do Certificado de Aprovação
+    
+    Exemplo de requisição:
+    ```json
+    {
+        "registro_ca": "12345"
+    }
+    ```
     """
-    result = await controller.get_certificate(registro_ca)
+    result = await controller.get_certificate(request.registro_ca)
     
     if not result.success:
         if "não encontrado" in result.message:

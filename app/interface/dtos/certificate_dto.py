@@ -1,5 +1,16 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
+
+
+class CertificateRequest(BaseModel):
+    """Requisição para buscar certificado por CA"""
+    registro_ca: str = Field(
+        ...,
+        title="Registro CA",
+        description="Número do registro do Certificado de Aprovação",
+        example="12345",
+        min_length=1
+    )
 
 
 class CertificateResponse(BaseModel):
