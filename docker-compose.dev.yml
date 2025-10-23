@@ -1,0 +1,18 @@
+name: api-consulta-epi-dev
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.Python.Dev
+    restart: "no" # Melhor para desenvolvimento: não reinicia em caso de erro
+    ports:
+      - "8400:8000" # Porta da aplicação FastAPI
+      - "5681:5681" # Porta do debugpy
+    volumes:
+      - .:/srv # Monta o código-fonte para hot-reload
+      - venv_api:/srv/.venv # Volume nomeado para o venv, isolado do host
+    environment:
+      - PYDEVD_DISABLE_FILE_VALIDATION=1
+
+volumes:
+  venv_api:
