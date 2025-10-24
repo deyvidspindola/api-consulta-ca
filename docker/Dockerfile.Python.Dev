@@ -1,0 +1,27 @@
+# Imagem base oficial e leve do Python
+FROM python:3.12.7-alpine
+
+WORKDIR /srv
+
+# 1. Copia apenas o arquivo de dependências para aproveitar o cache do Docker
+COPY requirements.txt .
+
+# 2. Instala dependências de build, depois as Python e, por fim, remove as de build.
+#    Isso reduz drasticamente o tamanho da imagem final e o consumo de memória.
+RUN apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    python3-dev \
+    build-base \
+    linux-headers \
+    openssl-dev \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apk del .build-deps
+
+# 3. Copia o resto do código-fonte
+COPY . .
+
+# 4. Comando de inicialização com o debugpy para depuração remota
+CMD ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5681", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

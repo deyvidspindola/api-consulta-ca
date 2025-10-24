@@ -1,0 +1,43 @@
+# -------------------------------------------------
+# ESTÁGIO 1: "builder" - Instala as dependências
+# -------------------------------------------------
+FROM python:3.12.7-alpine AS builder
+
+WORKDIR /srv
+
+# Instala dependências de sistema necessárias para a compilação de pacotes Python
+RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev
+
+# Copia e instala as dependências Python em um diretório de usuário
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# -------------------------------------------------
+# ESTÁGIO 2: "final" - Cria a imagem de produção limpa
+# -------------------------------------------------
+FROM python:3.12.7-alpine
+
+WORKDIR /srv
+
+# Cria um usuário e grupo sem privilégios de root por segurança
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copia as dependências Python do estágio "builder" para o diretório do usuário
+COPY --from=builder /root/.local /home/appuser/.local
+
+# Copia o código da aplicação e define o dono como o usuário criado
+COPY --chown=appuser:appgroup . .
+
+# Troca para o usuário sem privilégios
+USER appuser
+
+# Adiciona o binário do gunicorn (e outros) ao PATH do sistema
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Expõe a porta que a aplicação rodará dentro do container
+EXPOSE 8000
+
+# Comando de inicialização para produção usando Gunicorn com workers Uvicorn
+# -w 4: 4 processos worker (ajuste conforme os núcleos de CPU do seu servidor)
+# -k uvicorn.workers.UvicornWorker: Worker assíncrono ideal para FastAPI
+CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
