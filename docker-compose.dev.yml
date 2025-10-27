@@ -14,7 +14,7 @@ services:
       target: development
     restart: "no"  # Não reinicia automaticamente em dev para facilitar debug
     ports:
-      - "8400:8000"  # Porta da aplicação FastAPI
+      - "${API_PORT}:8000"  # Porta da aplicação FastAPI
       - "5681:5681"  # Porta do debugpy para debug remoto
     volumes:
       - .:/app:cached  # Mount para hot-reload (cached para melhor performance no macOS)
@@ -22,14 +22,14 @@ services:
     environment:
       - PYTHONPATH=/app
       - PYDEVD_DISABLE_FILE_VALIDATION=1
-      - LOG_LEVEL=debug
-      - APP_ENV=development
-      - DEBUG=true
-      - CACHE_TIMEOUT=3600
-      - FTP_HOST=ftp.mtps.gov.br
-      - FTP_ENDPOINT=/pcd/Arquivos/CAEPI
-      - FTP_FILE_NAME=tgg_export_caepi.zip
-      - CA_FILE_NAME=tgg_export_caepi.txt
+      - LOG_LEVEL=${LOG_LEVEL}
+      - APP_ENV=${APP_ENV}
+      - DEBUG=${DEBUG}
+      - CACHE_TIMEOUT=${CACHE_TIMEOUT}
+      - FTP_HOST=${FTP_HOST}
+      - FTP_ENDPOINT=${FTP_ENDPOINT}
+      - FTP_FILE_NAME=${FTP_FILE_NAME}
+      - CA_FILE_NAME=${CA_FILE_NAME}
     env_file:
       - .env  # Carrega variáveis do arquivo .env se existir
     networks:

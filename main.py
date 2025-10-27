@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.interface.routers.certificate_router import router as certificate_router
+from app.core.config import get_settings
+
+settings = get_settings()
 
 # Criar aplicação FastAPI com configuração Swagger completa
 app = FastAPI(
-    title="🏆 API CAEPI - Certificados de Aprovação",
+    title="API CAEPI - Certificados de Aprovação",
     description="""
     ## API para consulta de Certificados de Aprovação (CA) do CAEPI
     
@@ -19,10 +22,10 @@ app = FastAPI(
     do Ministério do Trabalho e Previdência Social (MTPS).
     
     ### Como usar
-    1. Use `/certificates/{registro_ca}` para buscar qualquer certificado
+    1. Use `/certificates/get-certificate-by-ca` para buscar qualquer certificado
     2. Use `/certificates/update-database` para atualizar a base de dados
     """,
-    version="1.0.0",
+    version=get_settings().app_version,
     contact={
         "name": "Suporte Técnico",
         "email": "suporte@example.com",
@@ -46,10 +49,10 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, especifique os domínios permitidos
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[settings.cors_origins],  # Em produção, especifique os domínios permitidos
+    allow_credentials=settings.cors_credentials,
+    allow_methods=settings.cors_methods,
+    allow_headers=settings.cors_headers,
 )
 
 # Incluir routers
@@ -71,7 +74,7 @@ async def health_check():
     return {
         "status": "OK", 
         "message": "API funcionando corretamente",
-        "version": "1.0.0"
+        "version": get_settings().app_version
     }
 
 @app.get(
@@ -85,9 +88,9 @@ async def root():
     Informações básicas da API.
     """
     return {
-        "title": "API CAEPI - Certificados de Aprovação",
-        "version": "1.0.0",
-        "description": "API para consulta de Certificados de Aprovação do CAEPI",
+        "title": get_settings().app_name,
+        "version": get_settings().app_version,
+        "description": get_settings().app_description,
         "docs": "/docs",
         "redoc": "/redoc"
     }
@@ -98,6 +101,6 @@ if __name__ == "__main__":
         "main:app", 
         host="0.0.0.0", 
         port=8000,
-        reload=True,  # Para desenvolvimento
+        reload=get_settings().reload,
         log_level="info"
     )

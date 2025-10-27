@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     app_version: str = Field('1.0.0', alias="APP_VERSION")
     app_description: str = Field('API CAEPI - Sistema de Consulta', alias="APP_DESCRIPTION")
     debug: bool = Field(False, alias="DEBUG")
+    reload: bool = Field(False, alias="RELOAD")
 
     # --- Configurações de Cache ---
     cache_timeout: int = Field(3600, alias="CACHE_TIMEOUT")
@@ -29,6 +30,12 @@ class Settings(BaseSettings):
     parquet_file_name: str = Field('ca_certificates.parquet', alias="PARQUET_FILE_NAME")
     enable_parquet_cache: bool = Field(True, alias="ENABLE_PARQUET_CACHE")
     parquet_compression: str = Field('snappy', alias="PARQUET_COMPRESSION")
+
+    # --- Configurações de CORS ---
+    cors_origins: str = Field('*', alias="CORS_ORIGINS")
+    cors_credentials: bool = Field(True, alias="CORS_CREDENTIALS")
+    cors_methods: str = Field('*', alias="CORS_METHODS")
+    cors_headers: str = Field('*', alias="CORS_HEADERS")
 
     # --- Configurações FTP ---
     ftp_host: str = Field(..., alias="FTP_HOST")
