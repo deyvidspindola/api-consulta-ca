@@ -1,18 +1,42 @@
-name: api-consulta-epi-dev
+# ===============================================================================
+# Docker Compose - Ambiente de Desenvolvimento
+# ===============================================================================
+# Para executar: docker-compose -f docker-compose.dev.yml up --build
+# ===============================================================================
+
+name: api-consulta-ca-dev
+
 services:
   api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.Python.Dev
-    restart: "no" # Melhor para desenvolvimento: não reinicia em caso de erro
+      dockerfile: Dockerfile
+      target: development
+    restart: "no"  # Não reinicia automaticamente em dev para facilitar debug
     ports:
-      - "8400:8000" # Porta da aplicação FastAPI
-      - "5681:5681" # Porta do debugpy
+      - "8400:8000"  # Porta da aplicação FastAPI
+      - "5681:5681"  # Porta do debugpy para debug remoto
     volumes:
-      - .:/srv # Monta o código-fonte para hot-reload
-      - venv_api:/srv/.venv # Volume nomeado para o venv, isolado do host
+      - .:/app:cached  # Mount para hot-reload (cached para melhor performance no macOS)
+      - pip_cache:/root/.cache/pip  # Cache do pip para builds mais rápidos
     environment:
+      - PYTHONPATH=/app
       - PYDEVD_DISABLE_FILE_VALIDATION=1
+      - LOG_LEVEL=debug
+    env_file:
+      - .env  # Carrega variáveis do arquivo .env
+    networks:
+      - api-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 volumes:
-  venv_api:
+  pip_cache:  # Volume para cache do pip
+
+networks:
+  api-network:
+    driver: bridge

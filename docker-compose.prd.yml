@@ -1,0 +1,54 @@
+# ===============================================================================
+# Docker Compose - Ambiente de Produção
+# ===============================================================================
+# Para executar: docker-compose -f docker-compose.prd.yml up -d
+# ===============================================================================
+
+name: api-consulta-ca-prod
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: api-consulta-ca:latest
+    container_name: api-consulta-ca-prod
+    restart: unless-stopped  # Reinicia automaticamente, exceto se parado manualmente
+    ports:
+      - "8400:8000"
+    env_file:
+      - .env  # Use .env.prod em produção real
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=info
+    networks:
+      - api-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Limites de recursos para prevenir consumo excessivo
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Configurações de segurança
+    security_opt:
+      - no-new-privileges:true
+    # Log rotation para evitar logs muito grandes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  api-network:
+    driver: bridge
