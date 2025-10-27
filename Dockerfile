@@ -9,9 +9,28 @@
 FROM python:3.12.7-alpine AS base
 
 # Labels para metadados da imagem
-LABEL maintainer="deyvidspindola" \
+LABEL maintainer="Sonepar" \
       description="API CAEPI - Certificados de Aprovação" \
       version="1.0.0"
+
+# Configurar repositórios e instalar dependências básicas
+# Usando HTTP em vez de HTTPS para contornar problemas de certificado em ambiente corporativo
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.20/main" > /etc/apk/repositories && \
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.20/community" >> /etc/apk/repositories && \
+    apk update --no-cache || \
+    (echo "Tentando com repositórios alternativos..." && \
+     echo "http://mirror.alpinelinux.org/alpine/v3.20/main" > /etc/apk/repositories && \
+     echo "http://mirror.alpinelinux.org/alpine/v3.20/community" >> /etc/apk/repositories && \
+     apk update --no-cache) && \
+    apk add --no-cache \
+        curl \
+        wget \
+        ca-certificates \
+        openssl
+
+# Certificados customizados (descomente se necessário no ambiente corporativo)
+# COPY zscaler-root.crt /usr/local/share/ca-certificates/zscaler-root.crt
+# RUN update-ca-certificates
 
 # Variáveis de ambiente para otimizar Python
 ENV PYTHONUNBUFFERED=1 \
@@ -21,10 +40,6 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Diretório de trabalho
 WORKDIR /app
-
-# Instalar dependências de sistema necessárias
-# curl é necessário para health checks
-RUN apk add --no-cache curl
 
 # -------------------------------------------------------------------------------
 # ESTÁGIO BUILDER: Instala dependências Python
@@ -43,8 +58,25 @@ RUN apk add --no-cache --virtual .build-deps \
 
 # Copiar e instalar dependências Python
 COPY requirements.txt .
+
+# Configurar pip para ambiente corporativo e instalar dependências
 RUN pip install --upgrade pip && \
-    pip install --user --no-warn-script-location -r requirements.txt
+    pip config set global.trusted-host "pypi.org files.pythonhosted.org pypi.python.org" && \
+    pip config set global.index-url "https://pypi.org/simple/" && \
+    pip install --user --no-warn-script-location \
+        --trusted-host pypi.org \
+        --trusted-host files.pythonhosted.org \
+        --trusted-host pypi.python.org \
+        --index-url https://pypi.org/simple/ \
+        -r requirements.txt || \
+    (echo "Tentando instalação sem SSL..." && \
+     pip install --user --no-warn-script-location \
+        --trusted-host pypi.org \
+        --trusted-host files.pythonhosted.org \
+        --trusted-host pypi.python.org \
+        --index-url http://pypi.douban.com/simple/ \
+        --extra-index-url https://pypi.org/simple/ \
+        -r requirements.txt)
 
 # -------------------------------------------------------------------------------
 # ESTÁGIO DESENVOLVIMENTO: Para debug e hot-reload
@@ -63,8 +95,8 @@ EXPOSE 8000 5681
 # Volume para hot-reload (será mapeado no docker-compose)
 VOLUME ["/app"]
 
-# Comando para desenvolvimento com debugpy
-CMD ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5681", "--wait-for-client", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Comando para desenvolvimento com debugpy (sem wait-for-client para não travar)
+CMD ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5681", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # -------------------------------------------------------------------------------
 # ESTÁGIO PRODUÇÃO: Imagem otimizada e segura

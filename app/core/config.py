@@ -1,37 +1,41 @@
 # app/core/config.py
 
+from functools import lru_cache
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """
     Classe para gerenciar todas as configurações da aplicação.
     Lê automaticamente as variáveis do arquivo .env especificado.
     """
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"  # Ignora campos extras do .env
+    )
     
     # --- Configurações Gerais da API ---
-    title: str = Field(default="API CAEPI", env="TITLE")
-    description: str = Field(default="...", env="DESCRIPTION")
-    version: str = Field(default="1.0.0", env="VERSION")
-    debug: bool = Field(default=False, env="DEBUG")
-
-    # --- Configurações da Fonte de Dados (FTP) ---
-    ftp_host: str = Field(..., env="FTP_HOST")
-    ftp_endpoint: str = Field(..., env="FTP_ENDPOINT")
-    ftp_file_name: str = Field(..., env="FTP_FILE_NAME")
+    app_env: str = Field('development', alias="APP_ENV")
+    app_name: str = Field('API CAEPI', alias="APP_NAME")
+    app_version: str = Field('1.0.0', alias="APP_VERSION")
+    app_description: str = Field('API CAEPI - Sistema de Consulta', alias="APP_DESCRIPTION")
+    debug: bool = Field(False, alias="DEBUG")
 
     # --- Configurações de Cache ---
-    cache_timeout: int = Field(default=3600, env="CACHE_TIMEOUT")
+    cache_timeout: int = Field(3600, alias="CACHE_TIMEOUT")
+    cache_dir: str = Field('cache', alias="CACHE_DIR")
+    parquet_file_name: str = Field('ca_certificates.parquet', alias="PARQUET_FILE_NAME")
+    enable_parquet_cache: bool = Field(True, alias="ENABLE_PARQUET_CACHE")
+    parquet_compression: str = Field('snappy', alias="PARQUET_COMPRESSION")
 
-    # --- Configurações de Segurança (para quando implementar) ---
-    # api_key: str = Field(..., env="API_KEY")
-    # allowed_origins: List[str] = Field(default=[], env="ALLOWED_ORIGINS")
+    # --- Configurações FTP ---
+    ftp_host: str = Field(..., alias="FTP_HOST")
+    ftp_endpoint: str = Field(..., alias="FTP_ENDPOINT")
+    ftp_file_name: str = Field(..., alias="FTP_FILE_NAME")
+    ca_file_name: str = Field('tgg_export_caepi.txt', alias="CA_FILE_NAME")
 
-    class Config:
-        # Define o nome do arquivo .env a ser carregado
-        env_file = ".env"
-        # Permite que o Pydantic leia variáveis de ambiente mesmo que não estejam no arquivo .env
-        case_sensitive = False
-
-# Cria uma instância única das configurações para ser usada em toda a aplicação
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

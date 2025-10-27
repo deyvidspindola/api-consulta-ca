@@ -5,15 +5,16 @@ from ftplib import FTP
 import io
 import zipfile
 import time
-from app.core.config import settings
+from app.core.config import get_settings
 
 class CAEPIDataSource(DataSourceInterface):
 
     def __init__(self):
         self.base_dados_df = None
-        self.file_name = "tgg_export_caepi.txt"
-        self.base_url = settings.ftp_host
-        self.endpoint = settings.ftp_endpoint
+        self.settings = get_settings()
+        self.file_name = self.settings.ca_file_name
+        self.base_url = self.settings.ftp_host
+        self.endpoint = self.settings.ftp_endpoint
         self.columns_name = [
             "RegistroCA", "DataValidade", "Situacao", "NRProcesso", "CNPJ",
             "RazaoSocial", "Natureza", "NomeEquipamento", "DescricaoEquipamento",
