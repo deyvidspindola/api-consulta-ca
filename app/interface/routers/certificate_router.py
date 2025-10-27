@@ -84,13 +84,6 @@ async def get_certificate(
     ```
     """
     result = await controller.get_certificate(request.registro_ca)
-    
-    if not result.success:
-        if "não encontrado" in result.message:
-            raise HTTPException(status_code=404, detail=result.message)
-        else:
-            raise HTTPException(status_code=500, detail=result.message)
-    
     return result
 
 @router.post(
@@ -123,8 +116,4 @@ async def update_database(
     a base de dados local para garantir informações atualizadas.
     """
     result = await controller.update_certificates_database()
-    
-    if not result.success:
-        raise HTTPException(status_code=500, detail=result.message)
-    
     return result
