@@ -214,17 +214,17 @@ class LoggingConfigurator:
     
     def _log_startup_info(self, logger: logging.Logger):
         """Log das informações de inicialização"""
-        logger.info("🚀 Iniciando aplicação API CAEPI...")
-        logger.info(f"📋 Ambiente: {self.settings.app_env}")
-        logger.info(f"🐛 Debug: {self.settings.debug}")
-        logger.info(f"📝 Log em arquivo: {self.settings.log_to_file}")
+        logger.info("Iniciando aplicação API CAEPI...")
+        logger.info(f"Ambiente: {self.settings.app_env}")
+        logger.info(f"Debug: {self.settings.debug}")
+        logger.info(f"Log em arquivo: {self.settings.log_to_file}")
         
         if self.settings.log_to_file:
-            logger.info(f"📄 Arquivo de log: {self.settings.log_file_path}")
-            logger.info("📊 Formato do arquivo: JSON estruturado")
+            logger.info(f"Arquivo de log: {self.settings.log_file_path}")
+            logger.info("Formato do arquivo: JSON estruturado")
         
-        logger.info("📝 Formato do console: Texto legível")
-        logger.info(f"🎯 Nível de log: {self.settings.log_level.upper()}")
+        logger.info("Formato do console: Texto legível")
+        logger.info(f"Nível de log: {self.settings.log_level.upper()}")
 
 
 # Instância global do configurador
