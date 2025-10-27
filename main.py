@@ -1,3 +1,5 @@
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.interface.routers.certificate_router import router as certificate_router
@@ -25,7 +27,7 @@ app = FastAPI(
     1. Use `/certificates/get-certificate-by-ca` para buscar qualquer certificado
     2. Use `/certificates/update-database` para atualizar a base de dados
     """,
-    version=get_settings().app_version,
+    version=settings.app_version,
     contact={
         "name": "Suporte Técnico",
         "email": "suporte@example.com",
@@ -74,7 +76,7 @@ async def health_check():
     return {
         "status": "OK", 
         "message": "API funcionando corretamente",
-        "version": get_settings().app_version
+        "version": settings.app_version
     }
 
 @app.get(
@@ -88,9 +90,9 @@ async def root():
     Informações básicas da API.
     """
     return {
-        "title": get_settings().app_name,
-        "version": get_settings().app_version,
-        "description": get_settings().app_description,
+        "title": settings.app_name,
+        "version": settings.app_version,
+        "description": settings.app_description,
         "docs": "/docs",
         "redoc": "/redoc"
     }
@@ -101,6 +103,6 @@ if __name__ == "__main__":
         "main:app", 
         host="0.0.0.0", 
         port=8000,
-        reload=get_settings().reload,
+        reload=settings.reload,
         log_level="info"
     )

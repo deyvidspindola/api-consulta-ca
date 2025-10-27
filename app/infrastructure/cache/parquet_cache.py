@@ -74,13 +74,13 @@ class ParquetCacheManager:
             self._save_metadata(df_optimized)
             
             cache_type = "parquet" if self.use_parquet else "pickle"
-            logger.info(f"Cache {cache_type} salvo: {self.cache_file_path}")
-            logger.info(f"Registros: {len(df_optimized)}, Tamanho: {self._get_file_size_mb():.2f}MB")
-            
+            logger.info("Cache salvo", extra={"cache_type": cache_type, "cache_path": str(self.cache_file_path)})
+            logger.info("Registros salvos", {"count": len(df_optimized), "size_mb": self._get_file_size_mb()})
+                    
             return True
             
         except Exception as e:
-            logger.error(f"Erro ao salvar cache: {e}")
+            logger.error("Erro ao salvar cache", extra={"error": str(e)})
             return False
     
     def load_from_cache(self) -> Optional[pd.DataFrame]:
@@ -101,11 +101,11 @@ class ParquetCacheManager:
                     df = pickle.load(f)
             
             cache_type = "parquet" if self.use_parquet else "pickle"
-            logger.info(f"Cache {cache_type} carregado: {len(df)} registros")
+            logger.info("Cache carregado", extra={"cache_type": cache_type, "cache_path": str(self.cache_file_path)})
             return df
             
         except Exception as e:
-            logger.error(f"Erro ao carregar cache: {e}")
+            logger.error("Erro ao carregar cache", extra={"error": str(e)})
             return None
     
     def is_cache_valid(self) -> bool:
@@ -144,9 +144,9 @@ class ParquetCacheManager:
             
             logger.info("Cache invalidado")
             return True
-            
+
         except Exception as e:
-            logger.error(f"Erro ao invalidar cache: {e}")
+            logger.error("Erro ao invalidar cache", extra={"error": str(e)})
             return False
     
     def search_certificates(self, registro_ca: str) -> Optional[pd.DataFrame]:
@@ -163,14 +163,14 @@ class ParquetCacheManager:
             df = self.load_from_cache()
             if df is None:
                 return None
-            
-            # Busca otimizada usando query (mais rápido que filtro tradicional)
-            result = df.query(f"RegistroCA == '{registro_ca}'")
-            
+            # se a coluna é numérica:
+            valor = pd.to_numeric(registro_ca, errors='coerce')
+            if pd.isna(valor):
+                return None
+            result = df.query("RegistroCA == @valor")
             return result if not result.empty else None
-            
         except Exception as e:
-            logger.error(f"Erro ao buscar no cache: {e}")
+            logger.error("Erro ao buscar no cache | error=%s", str(e))
             return None
     
     def search_certificates_by_filters(self, filters: dict) -> Optional[pd.DataFrame]:
@@ -195,14 +195,14 @@ class ParquetCacheManager:
                 if column in df.columns and value:
                     if isinstance(value, str):
                         # Busca case-insensitive para strings
-                        result = result[result[column].str.contains(value, case=False, na=False)]
+                        result = result[result[column].astype(str).str.contains(value, case=False, na=False)]
                     else:
                         result = result[result[column] == value]
             
             return result if not result.empty else None
             
         except Exception as e:
-            logger.error(f"Erro ao buscar com filtros: {e}")
+            logger.error("Erro ao buscar com filtros", extra={"error": str(e)})
             return None
     
     def get_cache_stats(self) -> dict:
@@ -237,7 +237,7 @@ class ParquetCacheManager:
             }
             
         except Exception as e:
-            logger.error(f"Erro ao obter estatísticas: {e}")
+            logger.error("Erro ao obter estatísticas do cache", extra={"error": str(e)})
             return {"cache_exists": False, "error": str(e)}
     
     def _optimize_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -289,8 +289,8 @@ class ParquetCacheManager:
                 json.dump(metadata, f, indent=2)
                 
         except Exception as e:
-            logger.warning(f"Erro ao salvar metadados: {e}")
-    
+            logger.warning("Erro ao salvar metadados", extra={"error": str(e)})
+
     def _load_metadata(self) -> dict:
         """Carrega metadados do cache"""
         try:
@@ -299,8 +299,8 @@ class ParquetCacheManager:
                 with open(self.metadata_file_path, 'r') as f:
                     return json.load(f)
         except Exception as e:
-            logger.warning(f"Erro ao carregar metadados: {e}")
-        
+            logger.warning("Erro ao carregar metadados", extra={"error": str(e)})
+
         return {}
     
     def _get_file_size_mb(self) -> float:
