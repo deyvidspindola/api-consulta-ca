@@ -1,11 +1,12 @@
-import logging
-import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.interface.routers.certificate_router import router as certificate_router
 from app.core.config import get_settings
+from app.core.logging_config import setup_logging
 
+# Configurar logging seguindo Clean Architecture
 settings = get_settings()
+logger = setup_logging()
 
 # Criar aplicação FastAPI com configuração Swagger completa
 app = FastAPI(

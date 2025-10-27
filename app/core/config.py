@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     app_description: str = Field('API CAEPI - Sistema de Consulta', alias="APP_DESCRIPTION")
     debug: bool = Field(False, alias="DEBUG")
     reload: bool = Field(False, alias="RELOAD")
+    
+    # --- Configurações de Logging ---
+    log_level: str = Field('INFO', alias="LOG_LEVEL")
+    log_to_file: bool = Field(True, alias="LOG_TO_FILE")
+    log_file_path: str = Field('logs/app.log', alias="LOG_FILE_PATH")
 
     # --- Configurações de Cache ---
     cache_timeout: int = Field(3600, alias="CACHE_TIMEOUT")
