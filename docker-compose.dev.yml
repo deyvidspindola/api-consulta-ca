@@ -1,0 +1,49 @@
+# ===============================================================================
+# Docker Compose - Ambiente de Desenvolvimento
+# ===============================================================================
+# Para executar: docker-compose -f docker-compose.dev.yml up --build
+# ===============================================================================
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: "no"  # Não reinicia automaticamente em dev para facilitar debug
+    ports:
+      - "${API_PORT}:8000"  # Porta da aplicação FastAPI
+      - "5681:5681"  # Porta do debugpy para debug remoto
+    volumes:
+      - .:/app:cached  # Mount para hot-reload (cached para melhor performance no macOS)
+      - pip_cache:/root/.cache/pip  # Cache do pip para builds mais rápidos
+    environment:
+      - PYTHONPATH=/app
+      - PYDEVD_DISABLE_FILE_VALIDATION=1
+      - LOG_LEVEL=${LOG_LEVEL}
+      - APP_ENV=${APP_ENV}
+      - DEBUG=${DEBUG}
+      - CACHE_TIMEOUT=${CACHE_TIMEOUT}
+      - FTP_HOST=${FTP_HOST}
+      - FTP_ENDPOINT=${FTP_ENDPOINT}
+      - FTP_FILE_NAME=${FTP_FILE_NAME}
+      - CA_FILE_NAME=${CA_FILE_NAME}
+    env_file:
+      - .env  # Carrega variáveis do arquivo .env se existir
+    networks:
+      - api-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  pip_cache:  # Volume para cache do pip
+
+networks:
+  api-network:
+    driver: bridge
